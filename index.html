@@ -59,10 +59,97 @@ const poolOf=(st,r)=>typeof st[r]=='function'?st[r]():st[r]===1?byc('F'):pool(st
 function rnd(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function pick(pl,key,ctx,day,gap,rng){let c=pl.filter(f=>(ctx.last[key+f.n]??-99)<=day-gap);if(!c.length)c=pl;const f=c[Math.floor(rng()*c.length)];ctx.last[key+f.n]=day;return f}
 const RG=(f,r)=>r=='F'?(f.n=='Aceite de oliva'?[5,30]:f.n=='Aguacate'?[30,120]:f.n=='Aceitunas'?[20,60]:[10,40]):r=='C'?(/Patata|Boniato/.test(f.n)?[100,450]:/Pan|Wrap/.test(f.n)?[40,200]:/Tortitas/.test(f.n)?[15,90]:/Avena/.test(f.n)?[20,120]:[30,170]):r=='P'?(f.c=='L'?[40,110]:f.c=='W'?[15,50]:f.c=='H'?[60,300]:f.c=='D'?[80,350]:/Hummus/.test(f.n)?[40,120]:[70,320]):[0,1000];
-function fit(a,T,fx){const g={P:0,C:0,V:a.V?fx.v:0,X:a.X?fx.x:0,F:0},R=Object.keys(g),tot=m=>R.reduce((s,r)=>s+(a[r]?a[r][m]*g[r]/100:0),0),cl=(v,r)=>{const[lo,hi]=RG(a[r],r);return Math.min(hi,Math.max(lo,v))};
-for(let i=0;i<5;i++){if(a.P)g.P=cl((T.p-(tot('p')-a.P.p*g.P/100))*100/a.P.p,'P');if(a.C)g.C=cl((T.h-(tot('h')-a.C.h*g.C/100))*100/a.C.h,'C');if(a.F)g.F=cl((T.f-(tot('f')-a.F.f*g.F/100))*100/a.F.f,'F')}
-let e=T.k-tot('k');if(a.C){g.C=cl(g.C+e/a.C.k*100,'C');e=T.k-tot('k')}if(a.F&&Math.abs(e)>15)g.F=cl(g.F+e/a.F.k*100,'F');
-R.forEach(r=>{if(!a[r])return;const u=a[r].n=='Huevo entero'?60:a[r].n=='Claras de huevo'?30:5;g[r]=Math.max(u,Math.round(g[r]/u)*u)});return g}
+
+function fit(a, T, fx) {
+    const g = {
+        P: 0,
+        C: 0,
+        V: a.V ? fx.v : 0,
+        X: a.X ? fx.x : 0,
+        F: 0
+    };
+
+    const R = Object.keys(g);
+
+    const tot = m => R.reduce((s, r) => {
+        if (!a[r]) return s;
+
+        return s + (Number(a[r][m]) || 0) * g[r] / 100;
+    }, 0);
+
+    const cl = (v, r) => {
+        const [lo, hi] = RG(a[r], r);
+        return Math.min(hi, Math.max(lo, v));
+    };
+
+    // Ajustar proteínas, hidratos y grasas.
+    for (let i = 0; i < 5; i++) {
+        if (a.P && (Number(a.P.p) || 0) > 0) {
+            g.P = cl(
+                (T.p - (tot("p") - a.P.p * g.P / 100))
+                * 100 / a.P.p,
+                "P"
+            );
+        }
+
+        if (a.C && (Number(a.C.h) || 0) > 0) {
+            g.C = cl(
+                (T.h - (tot("h") - a.C.h * g.C / 100))
+                * 100 / a.C.h,
+                "C"
+            );
+        }
+
+        if (a.F && (Number(a.F.f) || 0) > 0) {
+            g.F = cl(
+                (T.f - (tot("f") - a.F.f * g.F / 100))
+                * 100 / a.F.f,
+                "F"
+            );
+        }
+    }
+
+    // Ajustar las calorías.
+    let e = T.k - tot("k");
+
+    if (a.C && (Number(a.C.k) || 0) > 0) {
+        g.C = cl(
+            g.C + e / a.C.k * 100,
+            "C"
+        );
+
+        e = T.k - tot("k");
+    }
+
+    if (
+        a.F &&
+        (Number(a.F.k) || 0) > 0 &&
+        Math.abs(e) > 15
+    ) {
+        g.F = cl(
+            g.F + e / a.F.k * 100,
+            "F"
+        );
+    }
+
+    // Redondear las cantidades de los ingredientes.
+    R.forEach(r => {
+        if (!a[r]) return;
+
+        const u =
+            a[r].n === "Huevo entero" ? 60 :
+            a[r].n === "Claras de huevo" ? 30 :
+            5;
+
+        g[r] = Math.max(
+            u,
+            Math.round(g[r] / u) * u
+        );
+    });
+
+    return g;
+}
+
 function genMeal(sl,T,ctx,day,rng){const[nm,ty]=sl;let st,a={},title,sauce='',mth='';
 if(ty=='m'&&usable(MS)){st=MS}else{const L=ty=='b'?BS:SS,ok=L.map((s,i)=>i).filter(i=>usable(L[i])),alt=ok.filter(i=>i!=ctx.ls[nm]),cand=alt.length?alt:ok;if(cand.length){const i=cand[Math.floor(rng()*cand.length)];ctx.ls[nm]=i;st=L[i]}else st=FB}
 for(const r of ['P','C','V','X','F'])if(st[r])a[r]=pick(poolOf(st,r),ty+r,ctx,day,r=='P'?3:2,rng);
