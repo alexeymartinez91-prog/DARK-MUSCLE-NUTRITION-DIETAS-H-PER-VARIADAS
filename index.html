@@ -161,7 +161,31 @@ const tg=(t,sh)=>({k:t.k*sh,p:t.p*sh,c:t.c*sh,f:t.f*sh});
 function genPlan(seed){const t=tgt(P),ctx={last:{},ls:{}},rng=rnd(seed),days=[];for(let d=0;d<P.weeks*7;d++)days.push({meals:SL[P.meals].map(sl=>genMeal(sl,tg(t,sl[2]),ctx,d,rng))});return{seed,t,days,at:Date.now()}}
 function swap(d,m){const sl=SL[P.meals][m],ctx={last:{},ls:{}};PLAN.days.forEach((dy,i)=>dy.meals.forEach(ml=>ml.ing.forEach(x=>{if(i!=d||ml!==PLAN.days[d].meals[m])ctx.last[ml.ty+(x.cl=='A'||'PMHTL'.includes(x.cl)?'P':x.cl=='G'?'C':x.cl=='V'?'V':x.cl=='F'?'X':'F')+x.n]=i})));
 PLAN.days[d].meals[m]=genMeal(sl,tg(PLAN.t,sl[2]),ctx,d,rnd(Date.now()%1e9));sv();render()}
-function swapDay(d){SL[P.meals].forEach((_,m)=>swap(d,m))}
+
+function swapDay(d) {
+    if (!PLAN || !PLAN.days[d]) return;
+
+    const ctx = {
+        last: {},
+        ls: {}
+    };
+
+    const rng = rnd(Date.now() % 1e9);
+
+    PLAN.days[d].meals = SL[P.meals].map(sl => {
+        return genMeal(
+            sl,
+            tg(PLAN.t, sl[2]),
+            ctx,
+            d,
+            rng
+        );
+    });
+
+    sv();
+    render();
+}
+
 function combos(){const u=(st,r)=>new Set(poolOf(st,r).map(f=>f.n)).size,sa=SAU.filter(OKS).length;let mainN=0;if(usable(MS)){const o=u(MS,'C')*u(MS,'V')*u(MS,'F');poolOf(MS,'P').forEach(p=>mainN+=MTH[p.c].length*o*sa)}
 const c=st=>usable(st)?['P','C','V','X','F'].reduce((n,r)=>st[r]?n*u(st,r):n,1):0,bN=BS.reduce((s,x)=>s+c(x),0),sN=SS.reduce((s,x)=>s+c(x),0),sl=SL[P.meals],cnt=ty=>sl.filter(x=>x[1]==ty).length,lg=(n,k)=>n>1?k*Math.log10(n):0;return{mainN,bN,sN,log:7*(lg(mainN,cnt('m'))+lg(bN,cnt('b'))+lg(sN,cnt('s')))}}
 const fm=n=>n>=1e6?(n/1e6).toFixed(1)+' M':n>=1e3?Math.round(n/1e3)+' mil':String(n);
