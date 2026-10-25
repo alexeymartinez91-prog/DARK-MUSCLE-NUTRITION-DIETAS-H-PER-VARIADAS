@@ -58,7 +58,49 @@ const FB={C:['Arroz blanco (seco)','Patata','Boniato','Trigo sarraceno (seco)'],
 const poolOf=(st,r)=>typeof st[r]=='function'?st[r]():st[r]===1?byc('F'):pool(st[r]),usable=st=>['P','C','V','X','F'].every(r=>!st[r]||poolOf(st,r).length);
 function rnd(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function pick(pl,key,ctx,day,gap,rng){let c=pl.filter(f=>(ctx.last[key+f.n]??-99)<=day-gap);if(!c.length)c=pl;const f=c[Math.floor(rng()*c.length)];ctx.last[key+f.n]=day;return f}
-const RG=(f,r)=>r=='F'?(f.n=='Aceite de oliva'?[5,30]:f.n=='Aguacate'?[30,120]:f.n=='Aceitunas'?[20,60]:[10,40]):r=='C'?(/Patata|Boniato/.test(f.n)?[100,450]:/Pan|Wrap/.test(f.n)?[40,200]:/Tortitas/.test(f.n)?[15,90]:/Avena/.test(f.n)?[20,120]:[30,170]):r=='P'?(f.c=='L'?[40,110]:f.c=='W'?[15,50]:f.c=='H'?[60,300]:f.c=='D'?[80,350]:/Hummus/.test(f.n)?[40,120]:[70,320]):[0,1000];
+const 
+const RG = (f, r) => {
+    const n = f.n || "";
+    const c = f.c || "";
+
+    // Grasas, semillas y frutos grasos.
+    if (r === "F") {
+        if (n === "Aceite de oliva") return [3, 20];
+        if (n === "Aguacate") return [20, 100];
+        if (n === "Aceitunas") return [10, 40];
+        if (/Nueces|Almendras|Semillas/.test(n)) return [5, 30];
+
+        return [5, 35];
+    }
+
+    // Fuentes de hidratos de carbono.
+    if (r === "C") {
+        if (/Patata|Boniato/.test(n)) return [100, 350];
+        if (/Pan|Wrap/.test(n)) return [40, 150];
+        if (/Tortitas/.test(n)) return [15, 60];
+        if (/Avena/.test(n)) return [20, 100];
+        if (/Arroz|Pasta|Quinoa|Cuscús|Polenta/.test(n)) {
+            return [30, 130];
+        }
+
+        return [30, 150];
+    }
+
+    // Fuentes de proteína.
+    if (r === "P") {
+        if (c === "L") return [50, 180];
+        if (c === "W") return [15, 50];
+        if (c === "H") return [60, 250];
+        if (c === "D") return [60, 250];
+        if (/Hummus/.test(n)) return [30, 100];
+
+        return [50, 250];
+    }
+
+    // Verduras y otros ingredientes.
+    return [0, 400];
+};
+
 
 function fit(a, T, fx) {
     const g = {
