@@ -242,40 +242,38 @@ const dt=d=>d.meals.reduce((a,m)=>({k:a.k+m.k,p:a.p+m.p,c:a.c+m.c,f:a.f+m.f}),{k
 
 
 
+
 const estadoPeso = n => {
     const nombre = String(n || "").trim();
 
-    // Cereales, harinas y otros alimentos medidos en seco.
+    // Alimentos pesados en seco.
     if (
-        /\(seco(?:s)?\)/i.test(nombre) ||
+        /\(seco\)/i.test(nombre) ||
         /^(Avena|Soja texturizada)$/i.test(nombre) ||
-        /^(Arroz blanco|Arroz integral|Pasta(?: integral)?|Quinoa|Cuscús|Bulgur|Fideos de arroz|Trigo sarraceno|Polenta)(?:\s|$)/i.test(nombre)
+        /^(Arroz blanco|Arroz integral|Pasta|Pasta integral|Quinoa|Cuscús|Bulgur|Fideos de arroz|Trigo sarraceno|Polenta)$/i.test(nombre)
     ) {
         return "en seco";
     }
 
-    // Alimentos cuyo peso corresponde al producto tal como se vende.
+    // Conservas: peso escurrido.
+    if (/^(Atún en lata al natural|Sardinas en lata|Lentejas cocidas \(bote\))$/i.test(nombre)) {
+        return "escurrido";
+    }
+
+    // Productos pesados tal como se venden.
     if (
-        /^(Wrap de trigo|Pan integral|Pan de centeno|Pan blanco|Tortitas de arroz|Proteína whey|Proteína vegetal en polvo|Yogur griego 0%|Yogur natural|Yogur de soja|Skyr natural|Queso fresco batido 0%|Queso cottage|Kéfir|Leche semidesnatada|Bebida de soja|Hummus|Tofu firme|Tempeh|Seitán|Edamame|Bebida de soja)$/i.test(nombre)
+        /^(Wrap de trigo|Pan integral|Pan de centeno|Pan blanco|Tortitas de arroz|Proteína whey|Proteína vegetal en polvo|Yogur griego 0%|Yogur natural|Yogur de soja|Skyr natural|Queso fresco batido 0%|Queso cottage|Kéfir|Leche semidesnatada|Bebida de soja|Hummus|Tofu firme|Tempeh|Seitán|Edamame|Dátiles|Aceitunas|Aguacate|Crema de cacahuete|Semillas de girasol|Semillas de chía|Tahini|Almendras|Nueces|Pistachos|Anacardos)$/i.test(nombre)
     ) {
         return "tal como se vende";
     }
 
-    // Conservas: indicar que el peso es escurrido.
-    if (
-        /^(Atún en lata al natural|Sardinas en lata|Lentejas cocidas \(bote\))$/i.test(nombre)
-    ) {
-        return "escurrido";
-    }
-
-    // Aceite: el peso se expresa directamente en gramos.
+    // El aceite se indica directamente en gramos.
     if (/^Aceite de oliva$/i.test(nombre)) {
         return "";
     }
 
     return "en crudo";
 };
-
 
 const ingL = x => {
     if (x.n === "Huevo entero") {
